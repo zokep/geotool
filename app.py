@@ -369,12 +369,13 @@ if data is not None:
             st.error(f"Gagal ekspor GeoPDF: {e}")
 
 # ---------- TABEL DENGAN PAGINATION ----------
-if data is not None:
-    st.markdown("### 📋 Preview Data")
+if df is not None:
+    st.markdown("### Preview Data")
     page_size = 15
-    total_pages = math.ceil(len(data) / page_size)
+    total_pages = math.ceil(len(df) / page_size)
     page = st.number_input("Halaman:", min_value=1, max_value=total_pages, value=1, step=1)
     start = (page - 1) * page_size
     end = start + page_size
-    st.dataframe(data.iloc[start:end])
-
+    
+    # Ganti st.dataframe → st.write
+    st.write(df.iloc[start:end])
