@@ -369,18 +369,33 @@ if data is not None:
             st.error(f"Gagal ekspor GeoPDF: {e}")
 
 # ---------- TABEL DENGAN PAGINATION ----------
+# CSS GLOBAL – Taruh di AWAL APP (setelah import)
+st.markdown("""
+<style>
+.stDataFrame table {
+    width: 100% !important;
+    min-width: 1400px !important;  /* Paksa lebar minimal → scroll muncul */
+}
+.stDataFrame {
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 if df is not None:
-    st.markdown("### Preview Data")  # Atau "### 📋 Preview Data" kalau mau icon
+    st.markdown("### Preview Data")
     page_size = 15
     total_pages = math.ceil(len(df) / page_size)
     page = st.number_input("Halaman:", min_value=1, max_value=total_pages, value=1, step=1)
     start = (page - 1) * page_size
     end = start + page_size
     
-    # Fix geometry biar aman (dari error sebelumnya)
+    # Fix geometry
     display_slice = df.iloc[start:end].copy()
     if 'geometry' in display_slice.columns:
         display_slice['geometry'] = display_slice['geometry'].apply(lambda x: str(x) if x else "")
     
-    # INI KUNCI: Tambah use_container_width=True → tabel melebar full seperti offline
+    # KEMBALI KE st.dataframe – SEKARANG MELEBAR + SCROLL
     st.dataframe(display_slice, use_container_width=True)
