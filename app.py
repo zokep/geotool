@@ -370,12 +370,17 @@ if data is not None:
 
 # ---------- TABEL DENGAN PAGINATION ----------
 if df is not None:
-    st.markdown("### Preview Data")
+    st.markdown("### Preview Data")  # Atau "### 📋 Preview Data" kalau mau icon
     page_size = 15
     total_pages = math.ceil(len(df) / page_size)
     page = st.number_input("Halaman:", min_value=1, max_value=total_pages, value=1, step=1)
     start = (page - 1) * page_size
     end = start + page_size
     
-    # Ganti st.dataframe → st.write
-    st.write(df.iloc[start:end])
+    # Fix geometry biar aman (dari error sebelumnya)
+    display_slice = df.iloc[start:end].copy()
+    if 'geometry' in display_slice.columns:
+        display_slice['geometry'] = display_slice['geometry'].apply(lambda x: str(x) if x else "")
+    
+    # INI KUNCI: Tambah use_container_width=True → tabel melebar full seperti offline
+    st.dataframe(display_slice, use_container_width=True)
