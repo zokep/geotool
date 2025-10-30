@@ -41,30 +41,6 @@ st.sidebar.markdown(" 🪶 Opsi Popup")
 df = None
 options = []
 
-if uploaded:
-    ext = uploaded.name.split('.')[-1].lower()
-    try:
-        if ext in ["csv", "xlsx"]:
-            # deteksi otomatis untuk csv dan xlsx
-            if ext == "csv":
-                uploaded.seek(0)
-                text = uploaded.read().decode('utf-8', errors='ignore')
-                delimiter = ';' if ';' in text.splitlines()[0] else ','
-                df = pd.read_csv(StringIO(text), delimiter=delimiter)
-            else:
-                df = pd.read_excel(uploaded)
-        else:
-            # format geospasial: kml/kmz/geojson
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}")
-            tmp.write(uploaded.getbuffer())
-            tmp.close()
-            df = gpd.read_file(tmp.name)
-        options = list(df.columns)
-    except Exception as e:
-        st.sidebar.error(f"Gagal membaca file: {e}")
-        df = None
-        options = []
-
 # --- Multiselect selalu tampil ---
 popup_cols = st.sidebar.multiselect(
     "Pilih kolom yang ingin ditampilkan di popup (opsional):",
@@ -258,6 +234,18 @@ if uploaded:
 
 # ---------- TAMPILKAN PETA ----------
 if data is not None and not data.empty:
+    # DEBUG: Cek data yang bermasalah
+    problematic_data = []
+    for idx, row in data.iterrows():
+        geom = row.geometry
+        if geom is None or geom.is_empty:
+            problematic_data.append(f"Row {idx}: Geometry None/Empty")
+        elif geom.geom_type == 'Point' and (pd.isna(geom.y) or pd.isna(geom.x)):
+            problematic_data.append(f"Row {idx}: Point with NaN coordinates")
+    
+    if problematic_data:
+        st.warning(f"Data bermasalah ditemukan: {problematic_data[:5]}")  # Tampilkan 5 pertama
+        
     point_count = line_count = poly_count = 0
     marker_cluster = MarkerCluster().add_to(m)
     bounds = []
